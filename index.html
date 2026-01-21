@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IMEvidence Tracker | Multi-Scope Database</title>
+    <link rel="icon" type="image/png" href="https://github.com/manvendra12006-lgtm/Bug/blob/main/Gemini_Generated_Image_jrs0z8jrs0z8jrs0.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* Hacker Video Background Persistent */
+        #video-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: -1;
+            filter: brightness(0.3) contrast(1.2);
+        }
+
+        .severity-Critical { border-left: 4px solid #ef4444; background: linear-gradient(90deg, rgba(239, 68, 68, 0.1) 0%, transparent 100%); }
+        .severity-High { border-left: 4px solid #f97316; background: linear-gradient(90deg, rgba(249, 115, 22, 0.1) 0%, transparent 100%); }
+        .severity-Medium { border-left: 4px solid #eab308; background: linear-gradient(90deg, rgba(234, 179, 8, 0.1) 0%, transparent 100%); }
+        .severity-Low { border-left: 4px solid #3b82f6; background: linear-gradient(90deg, rgba(59, 130, 246, 0.1) 0%, transparent 100%); }
+        .severity-Informational { border-left: 4px solid #9ca3af; background: linear-gradient(90deg, rgba(156, 163, 175, 0.1) 0%, transparent 100%); }
+        
+        .custom-scroll::-webkit-scrollbar { width: 5px; }
+        .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #ef4444; border-radius: 10px; }
+        
+        .glass-panel { background: rgba(17, 24, 39, 0.75); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
+
+        .switch { position: relative; display: inline-block; width: 40px; height: 20px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #374151; transition: .4s; border-radius: 20px; }
+        .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: #ef4444; }
+        input:checked + .slider:before { transform: translateX(20px); }
+    </style>
+</head>
+<body class="bg-black text-gray-100 min-h-screen custom-scroll">
+
+    <video autoplay muted loop playsinline id="video-bg">
+        <source src="https://raw.githubusercontent.com/manvendra12006-lgtm/Bug-Tracker/main/6994754-uhd_3840_2160_25fps.mp4" type="video/mp4">
+    </video>
+
+    <div id="auth-screen" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div class="glass-panel p-8 rounded-2xl shadow-2xl w-full max-w-md">
+            <h1 class="text-3xl font-bold text-red-500 mb-2 flex items-center gap-2"><i class="fas fa-user-secret"></i> TERMINAL</h1>
+            <p class="text-gray-400 mb-6 font-mono text-sm tracking-tighter">IMEvidence dimension</p>
+            <input type="email" id="login-email" placeholder="Operator Email" class="w-full bg-gray-800/50 border border-gray-700 p-3 rounded mb-4 focus:outline-none focus:border-red-500">
+            <input type="password" id="login-pass" placeholder="Access Key" class="w-full bg-gray-800/50 border border-gray-700 p-3 rounded mb-6 focus:outline-none focus:border-red-500">
+            <button id="btn-login" class="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-3 rounded tracking-widest uppercase">Start Session</button>
+        </div>
+    </div>
+
+    <div id="choice-screen" class="hidden fixed inset-0 z-40 flex items-center justify-center p-4">
+        <div class="text-center max-w-2xl w-full">
+            <h2 class="text-2xl font-black mb-8 tracking-widest uppercase">Select <span class="text-red-500">Operation Scope</span></h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <button onclick="setScope('web_findings')" class="group p-8 glass-panel rounded-3xl hover:border-red-500 transition-all text-left">
+                    <i class="fas fa-globe text-4xl text-red-500 mb-4 group-hover:scale-110"></i>
+                    <h3 class="text-xl font-bold mb-2 uppercase">Web Tracker</h3>
+                    <p class="text-xs text-gray-500">Web Vulnerability Database</p>
+                </button>
+                <button onclick="setScope('android_findings')" class="group p-8 glass-panel rounded-3xl hover:border-red-500 transition-all text-left">
+                    <i class="fab fa-android text-4xl text-red-500 mb-4 group-hover:scale-110"></i>
+                    <h3 class="text-xl font-bold mb-2 uppercase">Android Tracker</h3>
+                    <p class="text-xs text-gray-500">Mobile Vulnerability Database</p>
+                </button>
+            </div>
+            <button onclick="signOutBtn()" class="mt-8 text-gray-600 hover:text-red-500 text-xs uppercase tracking-widest">Abort Session</button>
+        </div>
+    </div>
+
+    <div id="main-app" class="hidden relative z-10">
+        <header class="border-b border-gray-800 p-4 bg-black/60 backdrop-blur-md sticky top-0 z-30">
+            <div class="max-w-[1600px] mx-auto flex justify-between items-center">
+                <div class="flex items-center gap-3">
+                    <div id="scope-icon" class="bg-red-600 p-2 rounded-lg text-white"></div>
+                    <div>
+                        <h2 class="text-lg font-black tracking-tighter uppercase">IMEvidence <span class="text-red-500">Tracker</span></h2>
+                        <p id="scope-label" class="text-[9px] font-mono text-gray-500 uppercase tracking-widest"></p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="flex items-center bg-gray-900/80 border border-gray-800 rounded-lg px-2 py-1">
+                        <i class="fas fa-calendar-alt text-gray-500 text-[10px] mr-2"></i>
+                        <select id="earnings-period" onchange="renderTable()" class="bg-transparent text-[10px] text-gray-300 outline-none uppercase font-bold cursor-pointer">
+                            <option value="30">Last 30 Days</option>
+                            <option value="90">Last 3 Months</option>
+                            <option value="180">Last 6 Months</option>
+                            <option value="365">Last 1 Year</option>
+                            <option value="all" selected>Overall Progress</option>
+                        </select>
+                    </div>
+                    <button onclick="switchScope()" class="text-[10px] text-gray-400 hover:text-white border border-gray-700 px-3 py-1.5 rounded-lg uppercase">Switch Scope</button>
+                    <button id="btn-logout" class="text-gray-500 hover:text-red-400 font-mono text-xs">LOGOUT <i class="fas fa-power-off"></i></button>
+                </div>
+            </div>
+        </header>
+
+        <section class="max-w-[1600px] mx-auto px-4 md:px-6 pt-6">
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-9 gap-3">
+                <div class="glass-panel p-3 rounded-xl"><p class="text-[10px] text-gray-500 uppercase font-bold tracking-widest">Total Findings</p><p id="stat-total" class="text-xl font-black text-white">0</p></div>
+                <div class="glass-panel p-3 rounded-xl border-l-4 border-l-green-500"><p class="text-[10px] text-gray-500 uppercase font-bold tracking-widest">Reported</p><p id="stat-reported" class="text-xl font-black text-green-500">0</p></div>
+                <div class="glass-panel p-3 rounded-xl border-l-4 border-l-red-600"><p class="text-[10px] text-gray-500 uppercase font-bold tracking-widest">Critical</p><p id="stat-critical" class="text-xl font-black text-red-600">0</p></div>
+                <div class="glass-panel p-3 rounded-xl border-l-4 border-l-orange-500"><p class="text-[10px] text-gray-500 uppercase font-bold tracking-widest">High</p><p id="stat-high" class="text-xl font-black text-orange-500">0</p></div>
+                <div class="glass-panel p-3 rounded-xl border-l-4 border-l-yellow-500"><p class="text-[10px] text-gray-500 uppercase font-bold tracking-widest">Medium</p><p id="stat-medium" class="text-xl font-black text-yellow-500">0</p></div>
+                <div class="glass-panel p-3 rounded-xl border-l-4 border-l-blue-500"><p class="text-[10px] text-gray-500 uppercase font-bold tracking-widest">Low/Info</p><p id="stat-low-info" class="text-xl font-black text-blue-500">0</p></div>
+                <div class="glass-panel p-3 rounded-xl"><p class="text-[10px] text-gray-500 uppercase font-bold tracking-widest">HOF ⭐</p><p id="stat-hof" class="text-xl font-black text-yellow-400">0</p></div>
+                <div class="glass-panel p-3 rounded-xl"><p class="text-[10px] text-gray-500 uppercase font-bold tracking-widest">Certs 📜</p><p id="stat-certs" class="text-xl font-black text-blue-400">0</p></div>
+                <div class="glass-panel p-3 rounded-xl bg-green-950/20"><p id="bounty-label" class="text-[10px] text-green-500 uppercase font-bold tracking-widest">Total Bounty</p><p id="stat-bounty" class="text-xl font-black text-green-400">₹0</p></div>
+            </div>
+        </section>
+
+        <main class="max-w-[1600px] mx-auto p-4 md:p-6">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <aside class="lg:col-span-3">
+                    <section class="glass-panel p-6 sticky top-24 rounded-2xl">
+                        <h3 id="form-title" class="text-sm font-bold mb-6 text-gray-400 uppercase tracking-widest flex items-center gap-2"><i class="fas fa-plus-circle text-red-500"></i> New Finding</h3>
+                        <form id="finding-form" class="space-y-3">
+                            <input type="hidden" id="edit-id">
+                            <div><label class="text-[10px] uppercase text-gray-500 ml-1">Report Date</label><input type="date" id="reportDateInput" required class="w-full bg-gray-800/50 border border-gray-700 p-2 rounded text-sm focus:border-red-500 outline-none text-white"></div>
+                            <input type="text" id="domain" placeholder="Domain Name (lowercase)" required class="w-full bg-gray-800/50 border border-gray-700 p-2 rounded text-sm outline-none focus:border-red-500 text-white">
+                            <input type="text" id="program" placeholder="Platform Name" required class="w-full bg-gray-800/50 border border-gray-700 p-2 rounded text-sm outline-none focus:border-red-500 text-white">
+                            <input type="text" id="endpoint" placeholder="Vuln URL / Endpoint" class="w-full bg-gray-800/50 border border-gray-700 p-2 rounded text-sm outline-none focus:border-red-500 text-white">
+                            <div class="grid grid-cols-2 gap-2">
+                                <select id="severity" class="bg-gray-800/50 border border-gray-700 p-2 rounded text-sm outline-none text-white">
+                                    <option value="Informational">Informational</option><option value="Low">Low</option><option value="Medium" selected>Medium</option><option value="High">High</option><option value="Critical">Critical</option>
+                                </select>
+                                <input type="number" id="bounty" placeholder="Bounty (₹)" class="bg-gray-800/50 border border-gray-700 p-2 rounded text-sm outline-none text-white">
+                            </div>
+                            <input type="text" id="type" placeholder="Vulnerability Type" required class="w-full bg-gray-800/50 border border-gray-700 p-2 rounded text-sm outline-none text-white">
+                            <textarea id="impact" placeholder="Impact Description" rows="2" class="w-full bg-gray-800/50 border border-gray-700 p-2 rounded text-sm outline-none focus:border-red-500 text-white"></textarea>
+                            <input type="url" id="poc" placeholder="POC Link (URL)" class="w-full bg-gray-800/50 border border-gray-700 p-2 rounded text-sm outline-none text-white">
+                            <input type="url" id="hof-ss" placeholder="HoF Screenshot Link" class="w-full bg-gray-800/50 border border-gray-700 p-2 rounded text-sm outline-none text-white">
+                            <input type="url" id="cert-link" placeholder="Certificate Link" class="w-full bg-gray-800/50 border border-gray-700 p-2 rounded text-sm outline-none text-white">
+                            <div class="flex items-center justify-between p-2 bg-gray-800/30 rounded-lg">
+                                <span class="text-xs text-gray-400 font-bold uppercase tracking-tighter">Not Reported?</span>
+                                <label class="switch"><input type="checkbox" id="not-reported-toggle"><span class="slider"></span></label>
+                            </div>
+                            <div class="flex items-center justify-between p-2 bg-gray-800/30 rounded-lg">
+                                <label class="text-xs text-gray-400">Hall of Fame?</label>
+                                <input type="checkbox" id="hof" class="accent-red-500 h-4 w-4">
+                            </div>
+                            <button type="submit" id="btn-submit" class="w-full bg-red-600 hover:bg-red-500 py-3 rounded-lg font-bold mt-4 text-xs tracking-widest uppercase">Sync Finding</button>
+                            <button type="button" id="btn-cancel-edit" class="hidden w-full bg-gray-700 py-2 rounded-lg font-bold mt-2 text-[10px] uppercase">Cancel Edit</button>
+                        </form>
+                    </section>
+                </aside>
+
+                <div class="lg:col-span-9">
+                    <div class="flex flex-col md:flex-row gap-4 mb-6 items-center justify-between glass-panel p-4 rounded-2xl">
+                        <div class="relative w-full md:w-64"><i class="fas fa-search absolute left-3 top-3 text-gray-500 text-xs"></i><input type="text" id="search-bar" placeholder="Search..." class="w-full bg-gray-800/50 border border-gray-700 pl-10 pr-4 py-2 rounded-xl text-sm outline-none text-white"></div>
+                        <div class="flex flex-wrap gap-2">
+                            <select id="filter-severity" onchange="renderTable()" class="bg-gray-800/50 border border-gray-700 p-2 rounded-xl text-xs outline-none text-white"><option value="All">All Severities</option><option value="Critical">Critical</option><option value="High">High</option><option value="Medium">Medium</option><option value="Low">Low</option><option value="Informational">Informational</option></select>
+                            <select id="filter-status" onchange="renderTable()" class="bg-gray-800/50 border border-gray-700 p-2 rounded-xl text-xs outline-none text-white"><option value="All">All Statuses</option><option value="Reported">Reported Only</option><option value="Accepted">Accepted</option><option value="Triaged">Triaged</option><option value="Duplicate">Duplicate</option><option value="Informative">Informative</option><option value="Rejected">Rejected</option><option value="No Response">No Response</option><option value="Not Reported">Not Reported Only</option></select>
+                        </div>
+                    </div>
+                    <div class="glass-panel rounded-2xl overflow-hidden shadow-2xl overflow-x-auto">
+                        <table class="w-full text-left border-collapse min-w-[800px]">
+                            <thead class="bg-gray-800/50 text-gray-500 uppercase text-[10px] font-bold tracking-widest">
+                                <tr><th class="p-4">Details</th><th class="p-4">Vuln & Evidence</th><th class="p-4">Status & Reward</th><th class="p-4 text-right px-6">Actions</th></tr>
+                            </thead>
+                            <tbody id="vuln-table-body" class="divide-y divide-gray-800/50"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, updateDoc, deleteDoc, doc, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+       const firebaseConfig = {
+  apiKey: "AIzaSyBpNOjOQELs6wcJIdZJGd2FFt6TLML85Tw",
+  authDomain: "tracker-online-1b041.firebaseapp.com",
+  projectId: "tracker-online-1b041",
+  storageBucket: "tracker-online-1b041.firebasestorage.app",
+  messagingSenderId: "704359256038",
+  appId: "1:704359256038:web:a74f225b26110c01a9d027"
+}
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        let currentScope = "", currentBugs = [], unsubscribe = null;
+
+        document.getElementById('btn-login').addEventListener('click', async () => {
+            const email = document.getElementById('login-email').value, pass = document.getElementById('login-pass').value;
+            try { await signInWithEmailAndPassword(auth, email, pass); } catch (e) { alert("ACCESS DENIED"); }
+        });
+        window.signOutBtn = () => signOut(auth);
+        document.getElementById('btn-logout').addEventListener('click', signOutBtn);
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) { 
+                document.getElementById('auth-screen').classList.add('hidden'); 
+                if (!currentScope) document.getElementById('choice-screen').classList.remove('hidden'); 
+            } else { 
+                document.getElementById('auth-screen').classList.remove('hidden'); 
+                document.getElementById('choice-screen').classList.add('hidden'); 
+                document.getElementById('main-app').classList.add('hidden'); 
+            }
+        });
+
+        window.setScope = (scope) => {
+            currentScope = scope; 
+            document.getElementById('choice-screen').classList.add('hidden'); 
+            document.getElementById('main-app').classList.remove('hidden');
+            document.getElementById('scope-icon').innerHTML = scope === 'web_findings' ? '<i class="fas fa-globe"></i>' : '<i class="fab fa-android"></i>';
+            document.getElementById('scope-label').innerText = scope.toUpperCase();
+            initRealtimeUpdates();
+        };
+
+        window.switchScope = () => { if (unsubscribe) unsubscribe(); currentScope = ""; document.getElementById('main-app').classList.add('hidden'); document.getElementById('choice-screen').classList.remove('hidden'); };
+
+        function initRealtimeUpdates() {
+            if (unsubscribe) unsubscribe();
+            const q = query(collection(db, currentScope), orderBy("createdAt", "desc"));
+            unsubscribe = onSnapshot(q, (snapshot) => { currentBugs = snapshot.docs.map(d => ({id: d.id, ...d.data()})); renderTable(); });
+        }
+
+        document.getElementById('finding-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const editId = document.getElementById('edit-id').value;
+            const isNotReported = document.getElementById('not-reported-toggle').checked;
+            const data = { 
+                reportDate: document.getElementById('reportDateInput').value, 
+                program: document.getElementById('program').value, 
+                domain: document.getElementById('domain').value.toLowerCase(), 
+                endpoint: document.getElementById('endpoint').value,
+                severity: document.getElementById('severity').value, 
+                type: document.getElementById('type').value, 
+                impact: document.getElementById('impact').value, 
+                poc: document.getElementById('poc').value || "", 
+                hofSS: document.getElementById('hof-ss').value || "", 
+                certLink: document.getElementById('cert-link').value || "", 
+                bounty: Number(document.getElementById('bounty').value) || 0, 
+                hallOfFame: document.getElementById('hof').checked,
+                lastUpdated: serverTimestamp() 
+            };
+            if (editId) { 
+                await updateDoc(doc(db, currentScope, editId), data); 
+                cancelEdit();
+            } else { 
+                data.status = isNotReported ? "Not Reported" : "New";
+                data.createdAt = serverTimestamp(); 
+                await addDoc(collection(db, currentScope), data); 
+            }
+            document.getElementById('finding-form').reset();
+        });
+
+        function updateStats() {
+            const period = document.getElementById('earnings-period').value;
+            const now = new Date();
+            const stats = { total: currentBugs.length, reported: 0, critical: 0, high: 0, medium: 0, lowInfo: 0, hof: 0, certs: 0, bounty: 0 };
+            currentBugs.forEach(b => {
+                if (b.status !== 'Not Reported') stats.reported++;
+                if (b.status === 'Accepted') {
+                    if (b.severity === 'Critical') stats.critical++;
+                    else if (b.severity === 'High') stats.high++;
+                    else if (b.severity === 'Medium') stats.medium++;
+                    else stats.lowInfo++;
+                    if (b.hallOfFame) stats.hof++;
+                    if (b.certLink) stats.certs++;
+                    if (period === 'all') stats.bounty += (Number(b.bounty) || 0);
+                    else {
+                        const diff = Math.ceil(Math.abs(now - new Date(b.reportDate)) / (1000 * 60 * 60 * 24));
+                        if (diff <= Number(period)) stats.bounty += (Number(b.bounty) || 0);
+                    }
+                }
+            });
+            document.getElementById('stat-total').innerText = stats.total;
+            document.getElementById('stat-reported').innerText = stats.reported;
+            document.getElementById('stat-critical').innerText = stats.critical;
+            document.getElementById('stat-high').innerText = stats.high;
+            document.getElementById('stat-medium').innerText = stats.medium;
+            document.getElementById('stat-low-info').innerText = stats.lowInfo;
+            document.getElementById('stat-hof').innerText = stats.hof;
+            document.getElementById('stat-certs').innerText = stats.certs;
+            document.getElementById('stat-bounty').innerText = "₹" + stats.bounty.toLocaleString('en-IN');
+        }
+
+        window.renderTable = () => {
+            updateStats();
+            const search = document.getElementById('search-bar').value.toLowerCase();
+            const statusFilt = document.getElementById('filter-status').value;
+            const severityFilt = document.getElementById('filter-severity').value;
+            
+            document.getElementById('vuln-table-body').innerHTML = currentBugs
+                .filter(b => {
+                    const matchesSearch = b.program.toLowerCase().includes(search) || b.domain.toLowerCase().includes(search);
+                    const matchesSeverity = severityFilt === 'All' || b.severity === severityFilt;
+                    let matchesStatus = true;
+                    if(statusFilt === 'Reported') matchesStatus = (b.status !== 'Not Reported');
+                    else if(statusFilt === 'Not Reported Only') matchesStatus = (b.status === 'Not Reported');
+                    else if(statusFilt !== 'All') matchesStatus = (b.status === statusFilt);
+                    return matchesSearch && matchesSeverity && matchesStatus;
+                })
+                .map(b => `
+                    <tr class="severity-${b.severity} hover:bg-white/5 transition-colors">
+                        <td class="p-4">
+                            <div class="text-[9px] text-red-500 font-mono font-bold mb-1">${b.reportDate}</div>
+                            <div class="text-lg font-black text-white leading-tight lowercase">${b.domain}</div>
+                            <div class="text-[11px] text-gray-500 font-medium">${b.program}</div>
+                        </td>
+                        <td class="p-4">
+                            <div class="text-gray-200 text-sm font-semibold mb-1">${b.type}</div>
+                            <div class="flex flex-wrap gap-2 mb-1">
+                                <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-gray-800 border border-gray-700 uppercase">${b.severity}</span>
+                                ${b.poc ? `<a href="${b.poc}" target="_blank" class="text-[9px] text-red-400 border border-red-500/30 px-1 rounded hover:bg-red-500/10">POC</a>` : ''}
+                                ${b.hofSS ? `<a href="${b.hofSS}" target="_blank" class="text-[9px] text-yellow-400 border border-yellow-500/30 px-1 rounded hover:bg-yellow-500/10">HOF_SS</a>` : ''}
+                                ${b.certLink ? `<a href="${b.certLink}" target="_blank" class="text-[9px] text-blue-400 border border-blue-500/30 px-1 rounded hover:bg-blue-500/10">CERT</a>` : ''}
+                            </div>
+                            <div class="text-[10px] text-gray-400 italic line-clamp-1">${b.impact || ''}</div>
+                        </td>
+                        <td class="p-4">
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-black/50 border border-gray-700 uppercase">${b.status}</span>
+                                ${b.hallOfFame ? '⭐' : ''}
+                            </div>
+                            <div class="text-md font-bold text-green-500 font-mono">₹${(b.bounty || 0).toLocaleString()}</div>
+                        </td>
+                        <td class="p-4 text-right">
+                            <div class="flex justify-end gap-2 mb-2">
+                                <button onclick="editBug('${b.id}')" class="text-gray-500 hover:text-white"><i class="fas fa-edit"></i></button>
+                                <button onclick="deleteBug('${b.id}')" class="text-gray-500 hover:text-red-400"><i class="fas fa-trash-alt"></i></button>
+                            </div>
+                            <select onchange="updateStatus('${b.id}', this.value)" class="bg-black border border-gray-700 rounded text-[9px] p-1 text-white outline-none">
+                                <option value="" disabled selected>SET STATUS</option>
+                                <option value="Accepted">Accepted</option><option value="Triaged">Triaged</option><option value="Duplicate">Duplicate</option>
+                                <option value="Informative">Informative</option><option value="Rejected">Rejected</option><option value="No Response">No Response</option>
+                                <option value="Not Reported">Not Reported</option><option value="Resolved">Resolved</option>
+                            </select>
+                        </td>
+                    </tr>
+                `).join('');
+        };
+
+        window.editBug = (id) => {
+            const bug = currentBugs.find(b => b.id === id);
+            document.getElementById('edit-id').value = id;
+            document.getElementById('domain').value = bug.domain;
+            document.getElementById('program').value = bug.program;
+            document.getElementById('endpoint').value = bug.endpoint || "";
+            document.getElementById('type').value = bug.type;
+            document.getElementById('reportDateInput').value = bug.reportDate;
+            document.getElementById('severity').value = bug.severity;
+            document.getElementById('bounty').value = bug.bounty;
+            document.getElementById('impact').value = bug.impact || "";
+            document.getElementById('poc').value = bug.poc || "";
+            document.getElementById('hof-ss').value = bug.hofSS || "";
+            document.getElementById('cert-link').value = bug.certLink || "";
+            document.getElementById('hof').checked = bug.hallOfFame;
+            document.getElementById('not-reported-toggle').checked = (bug.status === "Not Reported");
+            document.getElementById('form-title').innerText = "Editing Report";
+            document.getElementById('btn-submit').innerText = "Update Cloud";
+            document.getElementById('btn-cancel-edit').classList.remove('hidden');
+        };
+
+        window.cancelEdit = () => {
+            document.getElementById('edit-id').value = "";
+            document.getElementById('finding-form').reset();
+            document.getElementById('form-title').innerText = "New Finding";
+            document.getElementById('btn-submit').innerText = "Sync Finding";
+            document.getElementById('btn-cancel-edit').classList.add('hidden');
+        };
+
+        document.getElementById('btn-cancel-edit').addEventListener('click', cancelEdit);
+        document.getElementById('search-bar').addEventListener('input', renderTable);
+        window.updateStatus = async (id, s) => { await updateDoc(doc(db, currentScope, id), { status: s }); };
+        window.deleteBug = async (id) => { if (confirm("Delete permanently?")) await deleteDoc(doc(db, currentScope, id)); };
+    </script>
+</body>
+</html>
