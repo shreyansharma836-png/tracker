@@ -260,22 +260,36 @@
             const period = document.getElementById('earnings-period').value;
             const now = new Date();
             const stats = { total: currentBugs.length, reported: 0, critical: 0, high: 0, medium: 0, lowInfo: 0, hof: 0, certs: 0, bounty: 0 };
+            
             currentBugs.forEach(b => {
-                if (b.status !== 'Not Reported') stats.reported++;
+                // Count reported bugs (anything except 'Not Reported')
+                if (b.status !== 'Not Reported') {
+                    stats.reported++;
+                }
+                
+                // Count severity stats for ALL bugs regardless of status
+                if (b.severity === 'Critical') stats.critical++;
+                else if (b.severity === 'High') stats.high++;
+                else if (b.severity === 'Medium') stats.medium++;
+                else if (b.severity === 'Low' || b.severity === 'Informational') stats.lowInfo++;
+                
+                // Count HOF and certs for all bugs (not just Accepted)
+                if (b.hallOfFame) stats.hof++;
+                if (b.certLink) stats.certs++;
+                
+                // Only count bounties for Accepted status
                 if (b.status === 'Accepted') {
-                    if (b.severity === 'Critical') stats.critical++;
-                    else if (b.severity === 'High') stats.high++;
-                    else if (b.severity === 'Medium') stats.medium++;
-                    else stats.lowInfo++;
-                    if (b.hallOfFame) stats.hof++;
-                    if (b.certLink) stats.certs++;
-                    if (period === 'all') stats.bounty += (Number(b.bounty) || 0);
-                    else {
+                    if (period === 'all') {
+                        stats.bounty += (Number(b.bounty) || 0);
+                    } else {
                         const diff = Math.ceil(Math.abs(now - new Date(b.reportDate)) / (1000 * 60 * 60 * 24));
-                        if (diff <= Number(period)) stats.bounty += (Number(b.bounty) || 0);
+                        if (diff <= Number(period)) {
+                            stats.bounty += (Number(b.bounty) || 0);
+                        }
                     }
                 }
             });
+            
             document.getElementById('stat-total').innerText = stats.total;
             document.getElementById('stat-reported').innerText = stats.reported;
             document.getElementById('stat-critical').innerText = stats.critical;
